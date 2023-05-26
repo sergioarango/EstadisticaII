@@ -8,6 +8,8 @@ Created on Fri May 19 18:46:37 2023
 import pandas as pd
 import numpy as np
 from scipy.stats import f
+from itertools import combinations      #Esta herramienta nos permite realizar las combinaciones de las medias para el método LSD
+from scipy.stats import t
 
 Data=pd.read_excel(r'C:\Users\sarango\OneDrive - UCO\Documentos\EstadisticaII\datosunifactorial.xlsx', sheet_name="Hoja1")    #Traemos los datos del experimento
 
@@ -51,6 +53,71 @@ P=1-f.cdf(Fcalc,GLtra,GLE)
 
 print("El valor F para el experimento es: "+str(Fcalc))
 print("El valor P para la Fcalc es: "+str(P))
+
+#Método LSD para identificar los tratamientos diferentes estadísticamente hablando
+medias=Data["medias"].tolist()          #volvemos la columna de medias de la tabla de datos una lista
+comb = combinations(medias,2)
+
+TablaLSD=pd.DataFrame()      #Aquí consignamos los resultados del método LSD
+Parejas=[]
+diferencia = []
+conclusion = []
+nombres=list(range(0,4))
+ParejasNombre = []
+
+combNombres=combinations(nombres,2)
+
+talfa=-t.ppf(0.025,N-k)
+LSD=talfa*np.sqrt(CME*((1/n)+(1/n)))
+
+for i in list(comb):
+    Parejas.append(i)
+    diferencia.append(abs(i[0]-i[1]))
+    if abs(i[0]-i[1])>=LSD:
+        conclusion.append("Significativa")
+    else:
+        conclusion.append("No significativa")
+
+TablaLSD["Parejas"]=Parejas
+TablaLSD["diferencia"]=diferencia
+TablaLSD["Conclusion"]=conclusion
+
+print(TablaLSD)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
