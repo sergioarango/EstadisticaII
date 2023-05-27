@@ -10,6 +10,8 @@ import numpy as np
 from scipy.stats import f
 from itertools import combinations      #Esta herramienta nos permite realizar las combinaciones de las medias para el método LSD
 from scipy.stats import t
+import matplotlib.pyplot as plt
+from scipy.stats import shapiro
 
 Data=pd.read_excel(r'C:\Users\sarango\OneDrive - UCO\Documentos\EstadisticaII\datosunifactorial.xlsx', sheet_name="Hoja1")    #Traemos los datos del experimento
 
@@ -84,12 +86,58 @@ TablaLSD["Conclusion"]=conclusion
 
 print(TablaLSD)
 
+#Gráfico de medias
 
+intervaloC=talfa*np.sqrt(CME/(N/2))
 
+for i in range (k):
+    media=medias[i]
+    Isup=media+intervaloC
+    Iinf=media-intervaloC
+    plt.plot([i,i,i],[Iinf,media,Isup], linewidth=2,marker=".", color="black")
 
+new_list = range(0, 3+1)                 #Esto es para quitar los decimales del eje x
+plt.xticks(new_list)                     
+plt.xlabel("tratamientos")               #Nombres a los ejes
+plt.ylabel("Tiempo de ensamble [min]")   #Nombres a los ejes
+plt.show()                               #termino la gráfica
 
+#Verificación de normalidad método de shapiro wilks
+#1. necesitamos una lista con todos los datos de matriz del DDE
+DataNormal=pd.DataFrame()
+DataNormal["Data"]=Data[1].tolist()+Data[2].tolist()+Data[3].tolist()+Data[4].tolist()
 
+#2 Se realiza se realiza la prueba de shapiro Wilks con la funcion Shapiro de scipy
+Shapiro=shapiro(DataNormal["Data"])
 
+#Se imprime el valor de W calculado y el valor P
+print("El valor de W calculaso es: ",Shapiro[0])
+print("El valor P para el W calculado en la prueba de shapiro es: ",Shapiro[1])
+
+if Shapiro[1]<0.05:
+    print("Se rechaza normalidad de los residuos")
+else:
+    print("No se rechaza normalidad de los residuos el ANOVA es valido en cuestión de normalidad")
+
+#prueba gráfica de normalidad
+#1 necesito todos los datos en una sola columna
+#2 Organizo los datos en orden ascendente, es decir de menor a mayor
+DataNormal=DataNormal.sort_values("Data")
+#3. Le asignamos a cada dato una posición
+i=list(range(1,len(DataNormal)+1))    #creamos una lista con las posiciones
+DataNormal["i"]=i                     #Anexamos las posiciones al DataFrame de data normal
+
+#4. Calculamos con esta función el papel de probabilidad normal
+def NormalOperation(x):
+    global N
+    return (x-0.5)/N     #i-0.5/N
+
+DataNormal["(i-0.5)/N"]=DataNormal["i"].apply(lambda x: NormalOperation(x))  #aplica a cada valor de la columna i la misma función que esta programada en la función Normal Operation
+
+plt.plot(DataNormal["Data"],DataNormal["(i-0.5)/N"],"bo")
+plt.xlabel("ri")
+plt.ylabel("(i-0.5)/N")
+plt.show()
 
 
 
