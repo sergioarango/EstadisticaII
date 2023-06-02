@@ -12,6 +12,8 @@ from itertools import combinations      #Esta herramienta nos permite realizar l
 from scipy.stats import t
 import matplotlib.pyplot as plt
 from scipy.stats import shapiro
+from scipy.stats import bartlett
+from sklearn.linear_model import LinearRegression #Sacar el R2 de la preuba de normalidad Gráfica
 
 Data=pd.read_excel(r'C:\Users\sarango\OneDrive - UCO\Documentos\EstadisticaII\datosunifactorial.xlsx', sheet_name="Hoja1")    #Traemos los datos del experimento
 
@@ -138,6 +140,51 @@ plt.plot(DataNormal["Data"],DataNormal["(i-0.5)/N"],"bo")
 plt.xlabel("ri")
 plt.ylabel("(i-0.5)/N")
 plt.show()
+
+#Sacar el R2 de la prueba de normalidad Gráfica
+x=np.array(DataNormal["Data"]).reshape(-1,1)     #pongo lo datos del ejex como un vecto de una dimensión
+y=np.array(DataNormal["(i-0.5)/N"]).reshape(-1,1) #pongo los datos de ejey como un vector de una dimensión
+
+regresion=LinearRegression().fit(x,y)
+print("El R2 de la regresión es: ",regresion.score(x,y))
+
+
+#Prueba de homocedastricidad
+#Prueba de Bartlett.
+#1 transporner la matriz, dado que la librería pide los datos en forma de columna, es decir cada tratamiento va a ser una columna y no una fila
+DataTras=Data.transpose()
+#2 quitamos las filas de medias y totales, solo requierimos los datos
+DataTras=DataTras.drop(["medias","Total"])
+#3 metemos los datos en la función de bartlett para la prueba de homocedasticidad
+BartlettTest=bartlett(DataTras[0],DataTras[1],DataTras[2],DataTras[3])
+
+print("El valor de chi cuadrado calculado es: ",BartlettTest[0])
+print("El valor P para prueba de Bartlett es: ",BartlettTest[1])
+
+if BartlettTest[1]<0.05:
+    print("Se rechaza Homocedasticidad, por lo tanto, el ANOVA no es valido")
+else:
+    print("No se rechaza Homocedasticidad el ANOVA es valido")
+
+
+#Prueba gráfica de homocedasticidad "Varianza constante"
+Residuos=[]
+for i in range (n):
+    predicho=Data["medias"][i]
+    Residuos.append(DataTras[i]-predicho)
+    residuo=DataTras[i]-predicho
+    plt.plot([predicho,predicho,predicho,predicho],residuo,"bo")
+
+plt.show()
+
+
+
+
+
+
+
+
+
 
 
 
